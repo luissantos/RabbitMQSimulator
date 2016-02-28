@@ -17,10 +17,11 @@
       </div>
       <div class="row">
         <div id="sim" class="span8">
-	  <canvas id="Simulator" data-processing-sources="js/Simulator.pde"
-		  width="800" height="410">
-	    <p>Your browser does not support the canvas tag.</p>
-	  </canvas>
+
+    <x-rabbitmq-simulator simulator-id="Simulator" player-mode="false" >
+
+    </x-rabbitmq-simulator>
+
 	  <noscript>
 	    <p>JavaScript is required to view the contents of this page.</p>
 	  </noscript>

@@ -22,8 +22,8 @@ boolean advancedMode = false;
 
 boolean isPlayer = false;
 
-static final int WIDTH = 600;
-static final int HEIGHT = 410;
+static final int WIDTH = 800;
+static final int HEIGHT = 800;
 
 static final int edgeStroke = 2;
 static final int nodeStroke = 2;
@@ -67,6 +67,11 @@ String[] nodeTypes = new String[5];
 PFont font;
 static final int fontSize = 12;
 
+NodeEventHandler exchangeClickEventHandler;
+NodeEventHandler queueClickEventHandler;
+NodeEventHandler producerClickEventHandler;
+NodeEventHandler consumerClickEventHandler;
+
 void bindJavascript(JavaScript js) {
   javascript = js;
 }
@@ -76,7 +81,7 @@ JavaScript javascript;
 void setup() {
   Processing.logger = console;
 
-  size(600, 410);
+  size(800, 800);
   font = createFont("SansSerif", fontSize);
   textFont(font);
   smooth();
@@ -100,6 +105,84 @@ void setup() {
 
   buildToolbar();
   anonExchange = new AnonExchange("anon-exchange", anonX, anonY);
+
+  exchangeClickEventHandler = new INodeEventHandler(){
+    void onClick(Node node){
+        reset_form("#exchange_form");
+        jQuery("#exchange_id").val(node.label);
+        jQuery("#exchange_name").val(node.label);
+        jQuery("#exchange_type").val(node.exchangeType);
+        enable_form("#exchange_form");
+        show_form("#exchange_form");
+        console.log("exchange");
+    }
+  }
+
+  queueClickEventHandler = new INodeEventHandler(){
+    void onClick(Node node){
+      reset_form("#queue_form");
+      jQuery("#queue_id").val(node.label);
+      jQuery("#queue_name").val(node.label);
+      enable_form("#queue_form");
+      show_form("#queue_form");
+      console.log("queue");
+    }
+  }
+
+  producerClickEventHandler = new INodeEventHandler(){
+    void onClick(Node node){
+          prepareEditProducerForm(node);
+          prepareNewMessageForm(node);
+          show_form("#edit_producer_form", "#new_message_form");
+    }
+  }
+
+  consumerClickEventHandler = new INodeEventHandler(){
+    void onClick(Node node){
+        reset_form("#edit_consumer_form");
+        jQuery("#edit_consumer_id").val(node.label);
+
+        if (node.name != null) {
+            jQuery("#edit_consumer_name").val(node.name);
+        } else {
+            jQuery("#edit_consumer_name").val(node.label);
+        }
+
+        enable_form("#edit_consumer_form");
+        show_form("#edit_consumer_form");
+    }
+  }
+
+}
+
+void prepareEditProducerForm(Producer p) {
+    reset_form("#edit_producer_form");
+    jQuery("#edit_producer_id").val(p.label);
+
+    if (p.name != null) {
+        jQuery("#edit_producer_name").val(p.name);
+    } else {
+        jQuery("#edit_producer_name").val(p.label);
+    }
+
+    enable_form("#edit_producer_form");
+}
+
+void prepareNewMessageForm(Producer p) {
+    reset_form("#new_message_form");
+    jQuery("#new_message_producer_id").val(p.label);
+
+    if (p.intervalId != null) {
+        enable_button('#new_message_stop');
+    } else {
+        disable_button('#new_message_stop');
+    }
+
+    if (p.msg != null) {
+        jQuery("#new_message_producer_payload").val(p.msg.payload);
+        jQuery("#new_message_producer_routing_key").val(p.msg.routingKey);
+    }
+    enable_form("#new_message_form");
 }
 
 String nodeTypeToString(int type) {
@@ -160,15 +243,19 @@ Node newNodeByType(int type, String label, float x, float y) {
   switch (type) {
     case EXCHANGE:
       n = new Exchange(label, x, y);
+      n.addClickEvent(exchangeClickEventHandler);
       break;
     case QUEUE:
       n = new Queue(label, x, y);
+        n.addClickEvent(queueClickEventHandler);
       break;
     case PRODUCER:
       n = new Producer(label, x, y);
+      n.addClickEvent(producerClickEventHandler);
       break;
     case CONSUMER:
       n = new Consumer(label, x, y);
+      n.addClickEvent(consumerClickEventHandler);
       break;
     default:
       println("Unknown type");

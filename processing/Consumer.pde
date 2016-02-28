@@ -50,19 +50,6 @@ class Consumer extends Node implements IConnectable {
       drawLabel();
   }
 
-  void mouseClicked() {
-      reset_form("#edit_consumer_form");
-      jQuery("#edit_consumer_id").val(this.label);
-
-      if (name != null) {
-          jQuery("#edit_consumer_name").val(name);
-      } else {
-          jQuery("#edit_consumer_name").val(label);
-      }
-
-      enable_form("#edit_consumer_form");
-      show_form("#edit_consumer_form");
-  }
 
   void remove() {
       disconnectNode(this);

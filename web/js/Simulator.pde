@@ -132,19 +132,6 @@ class Consumer extends Node implements IConnectable {
       drawLabel();
   }
 
-  void mouseClicked() {
-      reset_form("#edit_consumer_form");
-      jQuery("#edit_consumer_id").val(this.label);
-
-      if (name != null) {
-          jQuery("#edit_consumer_name").val(name);
-      } else {
-          jQuery("#edit_consumer_name").val(label);
-      }
-
-      enable_form("#edit_consumer_form");
-      show_form("#edit_consumer_form");
-  }
 
   void remove() {
       disconnectNode(this);
@@ -427,19 +414,13 @@ class Exchange extends Node implements IConnectable {
     }
   }
 
-  void mouseClicked() {
-    reset_form("#exchange_form");
-    jQuery("#exchange_id").val(this.label);
-    jQuery("#exchange_name").val(this.label);
-    jQuery("#exchange_type").val(this.exchangeType);
-    enable_form("#exchange_form");
-    show_form("#exchange_form");
-  }
 
   void remove() {
       disconnectNode(this);
       removeNode(this);
   }
+
+
 }
 
 static class ExchangeFigure
@@ -472,6 +453,10 @@ interface IConnectable {
   boolean accepts(Node n);
 }
 
+interface INodeEventHandler {
+  void onClick(Node n);
+}
+
 class Message {
   String payload;
   String routingKey;
@@ -499,11 +484,14 @@ abstract class Node {
   ArrayList incoming = new ArrayList(); // nodes that connected to this node
   ArrayList outgoing = new ArrayList(); // nodes this node connected to
 
+  ArrayList clickEvents;
+
   Node(String label, color nodeColor, float x, float y) {
      this.label = label;
      this.nodeColor = nodeColor;
      this.x = x;
      this.y = y;
+     clickEvents = new ArrayList();
   }
 
   abstract int getType();
@@ -619,6 +607,17 @@ abstract class Node {
   }
 
   void remove() {
+  }
+
+  void mouseClicked() {
+    for (int i = clickEvents.size()-1; i >= 0; i--) {
+          INodeEventHandler evh = (INodeEventHandler)clickEvents.get(i);
+          evh.onClick(this);
+    }
+  }
+
+  void addClickEvent(INodeEventHandler func){
+      clickEvents.add(func);
   }
 }
 
@@ -743,7 +742,6 @@ class Producer extends Node implements IConnectable {
 
     Producer(String label, float x, float y) {
         super(label, colors[PRODUCER], x, y);
-        showForm();
     }
 
     int getType() {
@@ -779,6 +777,10 @@ class Producer extends Node implements IConnectable {
         intervalSeconds = seconds;
     }
 
+    void getIntervalId(){
+      return intervalId;
+    }
+
     void stopPublisher() {
         pausePublisher();
         intervalSeconds = 0;
@@ -794,46 +796,6 @@ class Producer extends Node implements IConnectable {
         textAlign(CENTER, CENTER);
         String l = name == null ? label : name;
         text(l, x, y+labelPadding);
-    }
-
-    void mouseClicked() {
-      showForm();
-    }
-
-    void showForm() {
-      prepareEditProducerForm();
-      prepareNewMessageForm();
-      show_form("#edit_producer_form", "#new_message_form");
-    }
-
-    void prepareEditProducerForm() {
-        reset_form("#edit_producer_form");
-        jQuery("#edit_producer_id").val(this.label);
-
-        if (name != null) {
-            jQuery("#edit_producer_name").val(name);
-        } else {
-            jQuery("#edit_producer_name").val(label);
-        }
-
-        enable_form("#edit_producer_form");
-    }
-
-    void prepareNewMessageForm() {
-        reset_form("#new_message_form");
-        jQuery("#new_message_producer_id").val(this.label);
-
-        if (intervalId != null) {
-            enable_button('#new_message_stop');
-        } else {
-            disable_button('#new_message_stop');
-        }
-
-        if (msg != null) {
-            jQuery("#new_message_producer_payload").val(msg.payload);
-            jQuery("#new_message_producer_routing_key").val(msg.routingKey);
-        }
-        enable_form("#new_message_form");
     }
 
     void remove() {
@@ -923,14 +885,6 @@ class Queue extends Node implements IConnectable {
     text("Msgs: " + str(messages.size()), x, y - radii - 5);
   }
 
-  void mouseClicked() {
-    reset_form("#queue_form");
-    jQuery("#queue_id").val(this.label);
-    jQuery("#queue_name").val(this.label);
-    enable_form("#queue_form");
-    show_form("#queue_form");
-  }
-
   void remove() {
       disconnectNode(this);
       removeNode(this);
@@ -987,8 +941,8 @@ boolean advancedMode = false;
 
 boolean isPlayer = false;
 
-static final int WIDTH = 600;
-static final int HEIGHT = 410;
+static final int WIDTH = 800;
+static final int HEIGHT = 800;
 
 static final int edgeStroke = 2;
 static final int nodeStroke = 2;
@@ -1032,6 +986,11 @@ String[] nodeTypes = new String[5];
 PFont font;
 static final int fontSize = 12;
 
+NodeEventHandler exchangeClickEventHandler;
+NodeEventHandler queueClickEventHandler;
+NodeEventHandler producerClickEventHandler;
+NodeEventHandler consumerClickEventHandler;
+
 void bindJavascript(JavaScript js) {
   javascript = js;
 }
@@ -1041,7 +1000,7 @@ JavaScript javascript;
 void setup() {
   Processing.logger = console;
 
-  size(600, 410);
+  size(800, 800);
   font = createFont("SansSerif", fontSize);
   textFont(font);
   smooth();
@@ -1065,6 +1024,84 @@ void setup() {
 
   buildToolbar();
   anonExchange = new AnonExchange("anon-exchange", anonX, anonY);
+
+  exchangeClickEventHandler = new INodeEventHandler(){
+    void onClick(Node node){
+        reset_form("#exchange_form");
+        jQuery("#exchange_id").val(node.label);
+        jQuery("#exchange_name").val(node.label);
+        jQuery("#exchange_type").val(node.exchangeType);
+        enable_form("#exchange_form");
+        show_form("#exchange_form");
+        console.log("exchange");
+    }
+  }
+
+  queueClickEventHandler = new INodeEventHandler(){
+    void onClick(Node node){
+      reset_form("#queue_form");
+      jQuery("#queue_id").val(node.label);
+      jQuery("#queue_name").val(node.label);
+      enable_form("#queue_form");
+      show_form("#queue_form");
+      console.log("queue");
+    }
+  }
+
+  producerClickEventHandler = new INodeEventHandler(){
+    void onClick(Node node){
+          prepareEditProducerForm(node);
+          prepareNewMessageForm(node);
+          show_form("#edit_producer_form", "#new_message_form");
+    }
+  }
+
+  consumerClickEventHandler = new INodeEventHandler(){
+    void onClick(Node node){
+        reset_form("#edit_consumer_form");
+        jQuery("#edit_consumer_id").val(node.label);
+
+        if (node.name != null) {
+            jQuery("#edit_consumer_name").val(node.name);
+        } else {
+            jQuery("#edit_consumer_name").val(node.label);
+        }
+
+        enable_form("#edit_consumer_form");
+        show_form("#edit_consumer_form");
+    }
+  }
+
+}
+
+void prepareEditProducerForm(Producer p) {
+    reset_form("#edit_producer_form");
+    jQuery("#edit_producer_id").val(p.label);
+
+    if (p.name != null) {
+        jQuery("#edit_producer_name").val(p.name);
+    } else {
+        jQuery("#edit_producer_name").val(p.label);
+    }
+
+    enable_form("#edit_producer_form");
+}
+
+void prepareNewMessageForm(Producer p) {
+    reset_form("#new_message_form");
+    jQuery("#new_message_producer_id").val(p.label);
+
+    if (p.intervalId != null) {
+        enable_button('#new_message_stop');
+    } else {
+        disable_button('#new_message_stop');
+    }
+
+    if (p.msg != null) {
+        jQuery("#new_message_producer_payload").val(p.msg.payload);
+        jQuery("#new_message_producer_routing_key").val(p.msg.routingKey);
+    }
+    enable_form("#new_message_form");
 }
 
 String nodeTypeToString(int type) {
@@ -1125,15 +1162,19 @@ Node newNodeByType(int type, String label, float x, float y) {
   switch (type) {
     case EXCHANGE:
       n = new Exchange(label, x, y);
+      n.addClickEvent(exchangeClickEventHandler);
       break;
     case QUEUE:
       n = new Queue(label, x, y);
+        n.addClickEvent(queueClickEventHandler);
       break;
     case PRODUCER:
       n = new Producer(label, x, y);
+      n.addClickEvent(producerClickEventHandler);
       break;
     case CONSUMER:
       n = new Consumer(label, x, y);
+      n.addClickEvent(consumerClickEventHandler);
       break;
     default:
       println("Unknown type");

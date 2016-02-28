@@ -7,11 +7,14 @@ abstract class Node {
   ArrayList incoming = new ArrayList(); // nodes that connected to this node
   ArrayList outgoing = new ArrayList(); // nodes this node connected to
 
+  ArrayList clickEvents;
+
   Node(String label, color nodeColor, float x, float y) {
      this.label = label;
      this.nodeColor = nodeColor;
      this.x = x;
      this.y = y;
+     clickEvents = new ArrayList();
   }
 
   abstract int getType();
@@ -127,5 +130,16 @@ abstract class Node {
   }
 
   void remove() {
+  }
+
+  void mouseClicked() {
+    for (int i = clickEvents.size()-1; i >= 0; i--) {
+          INodeEventHandler evh = (INodeEventHandler)clickEvents.get(i);
+          evh.onClick(this);
+    }
+  }
+
+  void addClickEvent(INodeEventHandler func){
+      clickEvents.add(func);
   }
 }

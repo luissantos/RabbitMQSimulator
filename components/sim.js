@@ -2,7 +2,7 @@ var PLAYER = true;
 
 // from http://stackoverflow.com/a/105074/342013
 function GUID () {
-    var S4 = function () {        
+    var S4 = function () {
         return Math.floor(
                 Math.random() * 0x10000 /* 65536 */
             ).toString(16);
@@ -72,8 +72,8 @@ function processBindings(pjs, source, bindings) {
         for (var i = 0; i < destinations.size(); i++) {
             var dest = destinations.get(i);
             ret.push(newBinding(
-                source, 
-                dest.getLabel(), 
+                source,
+                dest.getLabel(),
                 pjs.nodeTypeToString(dest.getType()),
                 me.getKey()
             ));
@@ -91,7 +91,7 @@ function buildExport() {
         bindings: []
     };
 
-    for (var i = 0; i < nodes.length; i++) {        
+    for (var i = 0; i < nodes.length; i++) {
         if (nodes[i] != null && (nodes[i].getType() == EXCHANGE || nodes[i].getType() == QUEUE)) {
             var nodeName = nodes[i].getLabel();
             var nodeType = pjs.nodeTypeToString(nodes[i].getType());
@@ -121,7 +121,17 @@ function importNodes(nodes) {
     jQuery.each(nodes["exchanges"], function(k, v) {
         var x = (pjs.width/sections) * 2; // 2 is the exchange section;
         var y = ((pjs.height-50)/nodes["exchanges"].length+1) * (k+1);
-        imp_exchanges[v["name"]] = pjs.addNodeByType(EXCHANGE, v["name"], x, y);
+
+        var node = pjs.addNodeByType(EXCHANGE, v["name"], x, y);
+
+        node.addClickEvent({
+          run : function(n){
+            console.log("tesss");
+          }
+        });
+        imp_exchanges[v["name"]] = node;
+
+
         imp_exchanges[v["name"]].setExchangeType(exchange_types[v["type"]]);
     });
 
@@ -132,7 +142,7 @@ function importNodes(nodes) {
         pjs.bindToAnonExchange(imp_queues[v["name"]]);
     });
 
-    jQuery.each(nodes["bindings"], function(k, v) {        
+    jQuery.each(nodes["bindings"], function(k, v) {
         var destination = v.destination_type == "queue" ? imp_queues[v.destination] : imp_exchanges[v.destination];
         var source = imp_exchanges[v.source];
         var routing_key = v.routing_key;
@@ -183,18 +193,18 @@ function processPublish(node) {
         var payload = node.msg ? node.msg.payload : null;
         var routingKey = node.msg ? node.msg.routingKey : null;
         return {
-            to: node.outgoing.get(0).getLabel(), 
+            to: node.outgoing.get(0).getLabel(),
             payload: payload,
             routing_key: routingKey
         };
     } else {
         return null;
-    }    
+    }
 }
 
 function processConsume(node) {
     if (node.outgoing.size() > 0) {
-        return node.outgoing.get(0).getLabel();   
+        return node.outgoing.get(0).getLabel();
     } else {
         return null;
     }
@@ -211,12 +221,12 @@ function exportToPlayer() {
         consumers: []
     };
 
-    for (var i = 0; i < nodes.length; i++) {        
+    for (var i = 0; i < nodes.length; i++) {
         if (nodes[i] != null) {
             var nodeName = nodes[i].getLabel();
             var nodeType = pjs.nodeTypeToString(nodes[i].getType());
             var nodeX = nodes[i].x;
-            var nodeY = nodes[i].y;            
+            var nodeY = nodes[i].y;
             switch(nodes[i].getType()) {
                 case EXCHANGE:
                 toExport["exchanges"].push({name: nodeName, type: nodes[i].getExchangeType(), x: nodeX, y: nodeY});
@@ -247,7 +257,7 @@ var withPTimeouts = {};
 function withProcessing() {
     var id = arguments[0];
     var callback = arguments[1];
-    var args = Array.prototype.slice.call(arguments, 2);        
+    var args = Array.prototype.slice.call(arguments, 2);
     var pjs = Processing.getInstanceById(id);
 
     if (typeof withPTimeouts[id] != 'undefined') {
@@ -295,7 +305,7 @@ function loadIntoPlayer(pjs, data) {
         pjs.bindToAnonExchange(imp_queues[v["name"]]);
     });
 
-    jQuery.each(nodes["bindings"], function(k, v) {        
+    jQuery.each(nodes["bindings"], function(k, v) {
         var destination = v.destination_type == "queue" ? imp_queues[v.destination] : imp_exchanges[v.destination];
         var source = imp_exchanges[v.source];
         var routing_key = v.routing_key;
@@ -335,7 +345,7 @@ function show_message(consumer_id, msg) {
 
 function stopRendering(pjs) {
     console.log("stopRendering");
-    pjs.stopRendering();    
+    pjs.stopRendering();
 }
 
 function startRendering(pjs, pId) {
@@ -347,7 +357,7 @@ function initSimulator(id) {
     jQuery(window).focus(function() {
         withProcessing(id, startRendering, id);
     });
-    
+
     jQuery(window).blur(function() {
         withProcessing(id, stopRendering);
     });

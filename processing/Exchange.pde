@@ -142,17 +142,11 @@ class Exchange extends Node implements IConnectable {
     }
   }
 
-  void mouseClicked() {
-    reset_form("#exchange_form");
-    jQuery("#exchange_id").val(this.label);
-    jQuery("#exchange_name").val(this.label);
-    jQuery("#exchange_type").val(this.exchangeType);
-    enable_form("#exchange_form");
-    show_form("#exchange_form");
-  }
 
   void remove() {
       disconnectNode(this);
       removeNode(this);
   }
+
+
 }

@@ -8,6 +8,8 @@ abstract class Node {
   ArrayList outgoing = new ArrayList(); // nodes this node connected to
 
   ArrayList clickEvents;
+  ArrayList onMessageEvents;
+
 
   Node(String label, color nodeColor, float x, float y) {
      this.label = label;
@@ -15,6 +17,7 @@ abstract class Node {
      this.x = x;
      this.y = y;
      clickEvents = new ArrayList();
+     onMessageEvents = new ArrayList();
   }
 
   abstract int getType();
@@ -139,9 +142,22 @@ abstract class Node {
     }
   }
 
-  void addClickEvent(INodeEventHandler func){
+  void onMessage(Message msg) {
+      for (int i = onMessageEvents.size()-1; i >= 0; i--) {
+            INodeEventHandler evh = (INodeEventHandler)onMessageEvents.get(i);
+            evh.onMessage(this,msg);
+      }
+  }
+
+  void addClickEventHandler(INodeEventHandler func){
       if(func!=null){
             clickEvents.add(func);
       }
   }
+
+   void addOnMessageEventHandler(INodeEventHandler func){
+        if(func!=null){
+              onMessageEvents.add(func);
+        }
+    }
 }

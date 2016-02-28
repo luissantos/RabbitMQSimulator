@@ -117,7 +117,7 @@ class Consumer extends Node implements IConnectable {
   void trasnferArrived(Transfer transfer) {
     if (!isPlayer) {
         Message msg = transfer.getData();
-        show_message(getLabel(), msg.getPayload());
+        onMessage(msg);
     }
 
     rotateConsumer();
@@ -455,6 +455,7 @@ interface IConnectable {
 
 interface INodeEventHandler {
   void onClick(Node n);
+  void onMessage(Node n, Message m);
 }
 
 class Message {
@@ -485,6 +486,8 @@ abstract class Node {
   ArrayList outgoing = new ArrayList(); // nodes this node connected to
 
   ArrayList clickEvents;
+  ArrayList onMessageEvents;
+
 
   Node(String label, color nodeColor, float x, float y) {
      this.label = label;
@@ -492,6 +495,7 @@ abstract class Node {
      this.x = x;
      this.y = y;
      clickEvents = new ArrayList();
+     onMessageEvents = new ArrayList();
   }
 
   abstract int getType();
@@ -616,12 +620,24 @@ abstract class Node {
     }
   }
 
-  void addClickEvent(INodeEventHandler func){
-      if(func!=null){
-      clickEvents.add(func);
+  void onMessage(Message msg) {
+      for (int i = onMessageEvents.size()-1; i >= 0; i--) {
+            INodeEventHandler evh = (INodeEventHandler)onMessageEvents.get(i);
+            evh.onMessage(this,msg);
       }
-
   }
+
+  void addClickEventHandler(INodeEventHandler func){
+      if(func!=null){
+            clickEvents.add(func);
+      }
+  }
+
+   void addOnMessageEventHandler(INodeEventHandler func){
+        if(func!=null){
+              onMessageEvents.add(func);
+        }
+    }
 }
 
 static class NodeFigure
@@ -993,6 +1009,7 @@ NodeEventHandler exchangeClickEventHandler;
 NodeEventHandler queueClickEventHandler;
 NodeEventHandler producerClickEventHandler;
 NodeEventHandler consumerClickEventHandler;
+NodeEventHandler consumerOnMessageEventHandler;
 
 void bindJavascript(JavaScript js) {
   javascript = js;
@@ -1091,19 +1108,20 @@ Node newNodeByType(int type, String label, float x, float y) {
   switch (type) {
     case EXCHANGE:
       n = new Exchange(label, x, y);
-      n.addClickEvent(exchangeClickEventHandler);
+      n.addClickEventHandler(exchangeClickEventHandler);
       break;
     case QUEUE:
       n = new Queue(label, x, y);
-        n.addClickEvent(queueClickEventHandler);
+      n.addClickEventHandler(queueClickEventHandler);
       break;
     case PRODUCER:
       n = new Producer(label, x, y);
-      n.addClickEvent(producerClickEventHandler);
+      n.addClickEventHandler(producerClickEventHandler);
       break;
     case CONSUMER:
       n = new Consumer(label, x, y);
-      n.addClickEvent(consumerClickEventHandler);
+      n.addClickEventHandler(consumerClickEventHandler);
+      n.addOnMessageEventHandler(consumerOnMessageEventHandler);
       break;
     default:
       println("Unknown type");
@@ -1494,6 +1512,11 @@ void addProducerClickEventHandler(INodeEventHandler eventHandler){
 void addConsumerClickEventHandler(INodeEventHandler eventHandler){
     consumerClickEventHandler = eventHandler;
 }
+
+void addConsumerOnMessageEventHandler(INodeEventHandler eventHandler){
+    consumerOnMessageEventHandler = eventHandler;
+}
+
 class Stage {
   ArrayList transfers = new ArrayList();
   
@@ -1597,7 +1620,7 @@ class Transfer {
   Stage stage;
   
   float x, y;
-  int radii = 5;
+  int radii = 10;
   float distX, distY;
   float step = 0.02;
   float pct = 0.0;

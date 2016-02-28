@@ -242,6 +242,13 @@ function prepareNewMessageForm(p) {
 
 function onLoadSimulator(pjs){
 
+
+    pjs.addConsumerOnMessageEventHandler({
+        onMessage : function(node,msg) {
+            show_message(node.getLabel(),msg.getPayload());
+        }
+    });
+
     pjs.addExchangeClickEventHandler({
         onClick : function(node){
 

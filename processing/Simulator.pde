@@ -71,6 +71,7 @@ NodeEventHandler exchangeClickEventHandler;
 NodeEventHandler queueClickEventHandler;
 NodeEventHandler producerClickEventHandler;
 NodeEventHandler consumerClickEventHandler;
+NodeEventHandler consumerOnMessageEventHandler;
 
 void bindJavascript(JavaScript js) {
   javascript = js;
@@ -169,19 +170,20 @@ Node newNodeByType(int type, String label, float x, float y) {
   switch (type) {
     case EXCHANGE:
       n = new Exchange(label, x, y);
-      n.addClickEvent(exchangeClickEventHandler);
+      n.addClickEventHandler(exchangeClickEventHandler);
       break;
     case QUEUE:
       n = new Queue(label, x, y);
-        n.addClickEvent(queueClickEventHandler);
+      n.addClickEventHandler(queueClickEventHandler);
       break;
     case PRODUCER:
       n = new Producer(label, x, y);
-      n.addClickEvent(producerClickEventHandler);
+      n.addClickEventHandler(producerClickEventHandler);
       break;
     case CONSUMER:
       n = new Consumer(label, x, y);
-      n.addClickEvent(consumerClickEventHandler);
+      n.addClickEventHandler(consumerClickEventHandler);
+      n.addOnMessageEventHandler(consumerOnMessageEventHandler);
       break;
     default:
       println("Unknown type");
@@ -571,4 +573,8 @@ void addProducerClickEventHandler(INodeEventHandler eventHandler){
 
 void addConsumerClickEventHandler(INodeEventHandler eventHandler){
     consumerClickEventHandler = eventHandler;
+}
+
+void addConsumerOnMessageEventHandler(INodeEventHandler eventHandler){
+    consumerOnMessageEventHandler = eventHandler;
 }

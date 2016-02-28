@@ -35,7 +35,7 @@ class Consumer extends Node implements IConnectable {
   void trasnferArrived(Transfer transfer) {
     if (!isPlayer) {
         Message msg = transfer.getData();
-        show_message(getLabel(), msg.getPayload());
+        onMessage(msg);
     }
 
     rotateConsumer();

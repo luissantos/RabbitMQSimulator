@@ -140,6 +140,8 @@ abstract class Node {
   }
 
   void addClickEvent(INodeEventHandler func){
-      clickEvents.add(func);
+      if(func!=null){
+            clickEvents.add(func);
+      }
   }
 }

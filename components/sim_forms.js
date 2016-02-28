@@ -210,7 +210,91 @@ function handle_export_player_btn() {
     return false;
 }
 
+function prepareEditProducerForm(p) {
+    reset_form("#edit_producer_form");
+    jQuery("#edit_producer_id").val(p.label);
+
+    if (p.name != null) {
+        jQuery("#edit_producer_name").val(p.name);
+    } else {
+        jQuery("#edit_producer_name").val(p.label);
+    }
+
+    enable_form("#edit_producer_form");
+}
+
+function prepareNewMessageForm(p) {
+    reset_form("#new_message_form");
+    jQuery("#new_message_producer_id").val(p.label);
+
+    if (p.intervalId != null) {
+        enable_button('#new_message_stop');
+    } else {
+        disable_button('#new_message_stop');
+    }
+
+    if (p.msg != null) {
+        jQuery("#new_message_producer_payload").val(p.msg.payload);
+        jQuery("#new_message_producer_routing_key").val(p.msg.routingKey);
+    }
+    enable_form("#new_message_form");
+}
+
+function onLoadSimulator(pjs){
+
+    pjs.addExchangeClickEventHandler({
+        onClick : function(node){
+
+            reset_form("#exchange_form");
+            jQuery("#exchange_id").val(node.label);
+            jQuery("#exchange_name").val(node.label);
+            jQuery("#exchange_type").val(node.exchangeType);
+            enable_form("#exchange_form");
+            show_form("#exchange_form");
+            console.log("exchange");
+        }
+    });
+
+    pjs.addQueueClickEventHandler({
+        onClick: function(node){
+            reset_form("#queue_form");
+            jQuery("#queue_id").val(node.label);
+            jQuery("#queue_name").val(node.label);
+            enable_form("#queue_form");
+            show_form("#queue_form");
+            console.log("queue");
+        }
+    });
+
+    pjs.addProducerClickEventHandler({
+        onClick: function(node){
+            prepareEditProducerForm(node);
+            prepareNewMessageForm(node);
+            show_form("#edit_producer_form", "#new_message_form");
+        }
+    });
+
+    pjs.addConsumerClickEventHandler({
+        onClick: function(node){
+            reset_form("#edit_consumer_form");
+            jQuery("#edit_consumer_id").val(node.label);
+
+            if (node.name != null) {
+                jQuery("#edit_consumer_name").val(node.name);
+            } else {
+                jQuery("#edit_consumer_name").val(node.label);
+            }
+
+            enable_form("#edit_consumer_form");
+            show_form("#edit_consumer_form");
+        }
+    });
+
+}
+
 jQuery(document).ready(function() {
+
+
     init_form('#edit_producer_form', handle_edit_producer_form);
     init_form('#edit_consumer_form', handle_edit_consumer_form);
     init_form('#new_message_form', handle_new_message_form);

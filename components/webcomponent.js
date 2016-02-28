@@ -15,6 +15,8 @@ jQuery(document).ready(function() {
 
       var simulatorID = this.getAttribute("simulator-id");
 
+      var onLoadSim = this.getAttribute("onLoad");
+
       if(simulatorID == null){
         simulatorID = GUID();
       }
@@ -35,6 +37,10 @@ jQuery(document).ready(function() {
 
       initSimulator(simulatorID);
       withProcessing(simulatorID, function (pjs, data) {
+
+          if(onLoadSim!=null){
+              window[onLoadSim](pjs);
+          }
           pjs.togglePlayerMode(getPlayerMode(simulatorElement));
           loadIntoPlayer(pjs, data);
       }, t1_data);
